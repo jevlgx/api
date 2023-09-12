@@ -9,7 +9,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-public interface LogicalDocRepository {
+public interface OperationsRepository {
 	
 	public static void getRequest(String url, String username, String password) {
         try {

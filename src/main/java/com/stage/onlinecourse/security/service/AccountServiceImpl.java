@@ -79,7 +79,7 @@ public class AccountServiceImpl implements AccountService {
 		//appUserRepository.save(appUser);
 	}
 	
-	@Override
+//	@Override
 	public AppUser loadUserByUsername(String username) {
 		return appUserRepository.findByUsername(username);
 	}

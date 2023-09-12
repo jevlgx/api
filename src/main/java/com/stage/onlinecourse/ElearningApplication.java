@@ -1,5 +1,6 @@
 package com.stage.onlinecourse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,14 +9,18 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.stage.onlinecourse.security.service.AccountService;
+import com.stage.onlinecourse.service.mongoDbService.MongoDocumentService;
+
+import lombok.AllArgsConstructor;
 
 @SpringBootApplication
 public class ElearningApplication {
-
+	
 	public static void main(String[] args) {
 		SpringApplication.run(ElearningApplication.class, args);
+		System.out.println("000000000000000000000000");
 	}
-
+	
 	//@Bean
 	CommandLineRunner commandLineRunner(AccountService accountService) {
 		return args -> {
