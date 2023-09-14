@@ -31,6 +31,8 @@ public interface MongoDbRepository {
 			} else {
 				System.out.println("No matching documents found.");
 			}
+		}catch (Exception e) {
+			throw new RuntimeException("Erreur de connexion à la base de données distante");
 		}
 		return MongoClients.create(uri);
 	}
