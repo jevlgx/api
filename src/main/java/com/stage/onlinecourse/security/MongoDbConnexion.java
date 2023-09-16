@@ -15,14 +15,20 @@ public class MongoDbConnexion {
 	private String mongoClientURI = "mongodb://localhost:27017/";
 	private String databaseName = "baseTest";
 	private String trainingCollectionName = "trainingCollection";
+	private String folderCollectionName = "folderCollection";
 	
 	MongoClient mongoClient = MongoClients.create(mongoClientURI);
 	MongoDatabase database = mongoClient.getDatabase(databaseName);
 	public MongoCollection<Document> trainingCollection = database.getCollection(trainingCollectionName);
+	public MongoCollection<Document> folderCollection = database.getCollection(folderCollectionName);
 	
-	@Bean
-	@Qualifier("tainingCollection")
+	@Qualifier("trainingCollection")
 	MongoCollection<Document> trainingCollection(){
 		return trainingCollection;
+	}
+	
+	@Qualifier("folderCollection")
+	MongoCollection<Document> folderCollection(){
+		return folderCollection;
 	}
 }

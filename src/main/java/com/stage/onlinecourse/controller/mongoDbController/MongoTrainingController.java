@@ -60,33 +60,27 @@ public class MongoTrainingController {
 		return mongoTrainingService.deleteTraining(trainingName);
     }
 	
-	/*TODO
-	 * Verifier que c'est l'admin*/
 	@PostMapping("/training/{trainingName}/addFolder")
+	//Verifier que c'est l'admin
 	public ResponseEntity<Document> addFolderToTraining(@RequestParam(name = "folderName", required = true) String folderName,
 														@PathVariable(required = true) String trainingName){
 		
 		return mongoTrainingService.addFolderToTraining(trainingName, folderName);
 	}
 	
-	//Accessible à tous
 	@GetMapping("/training/{trainingName}")
+	//Accessible à tous
 	public ResponseEntity<Document> listTrainingFolders(@PathVariable(required = true) String trainingName){
 		
-		
-		//return mongoTrainingService.listTrainingFolders(trainingName);
-		return null;
+		return mongoTrainingService.listTrainingFolders(trainingName);
 	}
 	
-	/*TODO
-	 * verifier que c'est l'admin*/
 	@PutMapping("/training/{trainingName}/updateFolder")
+	// Verifier que c'est l'admin
 	public ResponseEntity<Document> updateFolderOfTraining(@PathVariable(required = true) String trainingName,
 																@RequestParam(name = "folderCurrentName", required = true) String folderCurrentName,
 																@RequestParam(name = "folderNewName", required = true) String folderNewName){
-		
-		//return mongoTrainingService.updateFolderOfTraining(trainingName, folderCurrentName, folderNewName);
-		return null;
+		return mongoTrainingService.updateFolderOfTraining(trainingName, folderCurrentName, folderNewName);
 	}
 	
 	/*TODO

@@ -1,24 +1,19 @@
 package com.stage.onlinecourse.model;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.lang.String;
-
 import org.bson.Document;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
-
 @AllArgsConstructor
 @Data
 @Builder
-public class Folder {
-	 
+public class File {
+
 	int id;
 	@Builder.Default
-	String type = "folder";
+	String type = "document";
 	String name;
 	String description;
 	int parentId;
@@ -35,5 +30,4 @@ public class Folder {
         		.append("storageLink", this.storageLink);
         return document;
     }
-	
 }

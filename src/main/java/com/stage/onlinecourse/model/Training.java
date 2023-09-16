@@ -1,8 +1,8 @@
 package com.stage.onlinecourse.model;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.lang.String;
 
 import org.bson.Document;
 
@@ -10,29 +10,29 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
-
 @AllArgsConstructor
 @Data
 @Builder
-public class Folder {
-	 
+public class Training {
+
 	int id;
 	@Builder.Default
-	String type = "folder";
+	String type = "training";
 	String name;
 	String description;
-	int parentId;
 	@Builder.Default
-	String storageLink = "";
+	String pictureLink = "";
+	@Builder.Default
+	ArrayList<Integer> children = new ArrayList<Integer>();
 	
 	public Document toDocument() {
         Document document = new Document()
         		.append("id", this.id)
-        		.append("type", this.type)
+        		.append("type", this.id)
         		.append("name", this.name)
         		.append("description", this.description)
-        		.append("parentId", this.parentId)
-        		.append("storageLink", this.storageLink);
+        		.append("pictureLink", this.pictureLink)
+        		.append("children", this.children);
         return document;
     }
 	
