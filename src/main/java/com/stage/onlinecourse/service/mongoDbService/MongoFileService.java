@@ -17,7 +17,7 @@ import lombok.Data;
 @Service
 @Transactional
 @AllArgsConstructor @Data
-public class MongoDocumentService {
+public class MongoFileService {
 	MongoDbRepository mongoDbRepository;
 	
 	public void testerz() {

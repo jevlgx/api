@@ -3,9 +3,7 @@ package com.stage.onlinecourse.service.mongoDbService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bson.Document;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Description;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -20,7 +18,6 @@ import com.stage.onlinecourse.model.Training;
 import lombok.AllArgsConstructor;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 
@@ -28,26 +25,11 @@ import java.util.List;
 @Component
 public class MongoTrainingService {
 	
-	@Autowired
 	@Qualifier("trainingCollection")
 	public MongoCollection<Document> trainingCollection;
 	
-	@Autowired
 	@Qualifier("folderCollection")
-	public MongoCollection<Document> folderColection;
-	
-	private Document getTraining(String trainingName) {
-		Document training = trainingCollection.find(new Document("name", trainingName)).first();
-		if(training == null) throw new RuntimeException("La formation "+trainingName+" n'existe pas");
-		return training;
-	}
-	
-	private Document getFolder(Document training, String folderName) {
-		Document trainingChildren = (Document)training.get("children");
-		Document folder = (Document)trainingChildren.get(folderName);
-		if(folder == null) throw new RuntimeException("Le dossier "+folderName+" n'existe pas dans cette formation");
-		return folder;
-	}
+	public MongoCollection<Document> folderCollection;
 	
 	public ResponseEntity<Document> createTraining(String trainingName,String description) {
 		trainingName = trainingName.toLowerCase();
@@ -65,19 +47,18 @@ public class MongoTrainingService {
 			throw new RuntimeException("Les parametres name et description ne doivent pas être vides");
 		}
 		
-		Document document = trainingCollection.find(new Document("name", trainingName)).first();
-		if(document != null) throw new RuntimeException("Une formation avec le même nom existe déjà");
+		if(Training.exist(trainingName)) throw new RuntimeException("Une formation avec le même nom existe déjà");
 		
 		// Squelette de la formation
-		Document training = Training.builder()
+		Training training = Training.builder()
 				.name(trainingName)
 				.description(description)
-				.build().toDocument();
-		trainingCollection.insertOne(training);
-		// Retirer le champ _id avant de retourner la formation
-		document = trainingCollection.find(new Document("name", trainingName)).projection(Projections.excludeId()).first();
-		
-		return ResponseEntity.status(HttpStatus.CREATED).body(training);
+				.pictureLink("")
+				.build();
+		Document trainingAsDocument = training.toDocument();
+		trainingCollection.insertOne(trainingAsDocument);
+		trainingAsDocument = trainingCollection.find(new Document("name", trainingName)).projection(Projections.excludeId()).first();
+		return ResponseEntity.status(HttpStatus.CREATED).body(trainingAsDocument);
 	}
 
 	public ResponseEntity<List<Document>> listAllTraining() {
@@ -109,59 +90,48 @@ public class MongoTrainingService {
 		trainingName = trainingName.toLowerCase();
 		/*TODO:
 		 * gerer les eventuelles failles de securite
-		 * DONE
+		 * * DONE
 		 * Renvoyer une erreur si le nom de la formationn'est pas renseigné
 		 * renvoyer une erreur si la formation spécifiée n'existe pas
 		 * renvoyer le document si il existe
 		 * */
 		
 		if (trainingName == "") throw new RuntimeException("Le nom cherché doit être renseigné");
-		
-		Document query = new Document("name", trainingName);
-        Document document = trainingCollection.find(query).projection(Projections.excludeId()).first();
-		
-        if (document == null) throw new RuntimeException("Aucune formation avec ce nom n'a été trouvée");
-        
-		return ResponseEntity.status(HttpStatus.OK).body(document);
+		Training training = Training.getTrainingByName(trainingName);
+		return ResponseEntity.status(HttpStatus.OK).body(training.toDocument());
 		
 	}
 
-	public ResponseEntity<Document> updateTraining(String trainingCurrentName, String newName,String newDescription){
+	public ResponseEntity<Document> updateTraining(String trainingCurrentName, String newName,String newDescription, String newPictureLink){
 		trainingCurrentName = trainingCurrentName.toLowerCase();
 		newName = newName.toLowerCase();
 		/*TODO:
 		 * gerer les eventuelles failles de securite
+		 * ajouter e lien vers l'image de la formation
 		 * *DONE
 		 * renvoyer une erreur si une des informations n'est pas renseignée
 		 * renvoyer une erreur si La formation n'existe pas
 		 * Renvoyer une erreur si une formation avec le nouveau nom existe déjà
-		 * renvoyer une erreur si les donnee entrées sont identiques aux anciennes
 		 * Enregistrer les informations et renvoyer la nouvelle formation si tout est OK
 		 * */
 		if(trainingCurrentName == "") throw new RuntimeException("Vous devez renseigner l'ancien nom de la formation");
 		if (newName == "" || newDescription == "") throw new RuntimeException("Vous devez renseigner le nouveau nom de la formation et sa description");
 		
-		// verifier que la formation existe bien
-        Document currentDocument = trainingCollection.find(new Document("name", trainingCurrentName)).first();
-        if (currentDocument == null) throw new RuntimeException("Aucune formation avec ce nom n'a été trouvée");
+		Training currentTraining = Training.getTrainingByName(trainingCurrentName);
 		
-		// verifier que le nouveau nom est libre
-        Document document = trainingCollection.find(new Document("name", newName)).first();
-        if(document != null) throw new RuntimeException("Il existe déjà une formation nommée "+ newName);
+		if(Training.exist(newName)) throw new RuntimeException("Il existe déjà une formation nommée "+ newName);
         
-        // verififer que les donnes ne sont pas identiques 
-        String trainingCurrentDescription = currentDocument.get("description").toString();
-        if(trainingCurrentDescription == newDescription && trainingCurrentName == newName) {
-        	throw new RuntimeException("Les donnes entrées sont identiques aux anciennes");
-        }
+		Training newTraining = Training.builder()
+				.name(newName)
+				.description(newDescription)
+				.pictureLink(newPictureLink)
+				.build();
+		if(newTraining.equals(currentTraining)) throw new RuntimeException("Les donnes entrées sont identiques aux anciennes");
         
-        document = new Document("name", newName);
-        Document updatedDocument = new Document("$set", document.append("description", newDescription));
-        trainingCollection.updateOne(currentDocument, updatedDocument);
+        Document updatedTraining = new Document("$set", newTraining.toDocument());
+        trainingCollection.updateOne(currentTraining.toDocument(), updatedTraining);
     
-        // recuperer le document mis à jour
-        document = trainingCollection.find(document).projection(Projections.excludeId()).first();
-		return ResponseEntity.status(HttpStatus.OK).body(document);
+		return ResponseEntity.status(HttpStatus.OK).body(newTraining.toDocument());
 	}
 
 	public ResponseEntity<Document> deleteTraining(String trainingName) {
@@ -174,10 +144,10 @@ public class MongoTrainingService {
 		 * */
 		if (trainingName == "") throw new RuntimeException("Vous devez renseigner le nom de la formation à supprimer");
 		
-		Document document = trainingCollection.find(new Document("name", trainingName)).first();
-		if(document == null) throw new RuntimeException("La formation "+trainingName+" n'existe pas");
+		Training training = Training.getTrainingByName(trainingName);
 		
-		trainingCollection.deleteOne(document);
+		trainingCollection.deleteOne(training.toDocument());
+		
 		return ResponseEntity.status(HttpStatus.OK).body(new Document("name", trainingName));
 	}
 
@@ -188,25 +158,24 @@ public class MongoTrainingService {
 		 * *DONE
 		 * envoyer une erreur si un des paramettres en vide
 		 * renvoyer une erreur si la fromation n'existe pas
-		 * envoyer une erreur si le dossier existe déjà
-		 * crééer le dossier et le renvoyer
+		 * envoyer une erreur si la formation contient deja un dossier avec ce nom
+		 * crééer le dossier le placer dans la collection des dossiers et le renvoyer
 		 * */
 		if (trainingName == "" || folderName == "") throw new RuntimeException("Vous devez renseiger les noms de la formation et du dossier à créer");
 		
-		Document training = trainingCollection.find(new Document("name", trainingName)).first();
-		if(training == null) throw new RuntimeException("La formation "+trainingName+" n'existe pas");
+		Training training = Training.getTrainingByName(trainingName);
 		
-		//renvoyer une erreur si le dossier existe deja
-		//0000000000000Document trainingChildren = (Document)training.get("children");
-		Document folder = (Document)trainingChildren.get(folderName);
-		if(folder != null) throw new RuntimeException("Le dossier "+folderName+" existe déjà dans cette formation");
+		if(training.hasFolder(folderName)) throw new RuntimeException("La formation "+trainingName+" contient déjà un dossier nommé "+folderName);
 		
-		Document newFolder = Folder.builder()
-				.logicalDocId(000).build().toDocument();
-		training.get("children", Document.class).append(folderName, newFolder);
-		trainingCollection.replaceOne(new Document("name", trainingName), training);
-		
-		return ResponseEntity.status(HttpStatus.OK).body(training);
+		// TODO ajouter le lien vers logicalDoc
+		Folder folder = Folder.builder()
+				.name(folderName)
+				.parentId(training.getId())
+				.storageLink("")
+				.build();
+		Document folderTodocument = folder.toDocument();
+		folderCollection.insertOne(folderTodocument);
+		return ResponseEntity.status(HttpStatus.OK).body(folderTodocument);
 	}
 
 	public ResponseEntity<Document> listTrainingFolders(String trainingName) {
@@ -218,12 +187,17 @@ public class MongoTrainingService {
 		 * renvoyer une erreur s'il n'y a pas de dossiers
 		 * renvoyer la liste des dossiers si elle existe
 		 * */
-		if(trainingName == "") throw new RuntimeException("Vous devez préciser le nom de la formation");
-		Document training = getTraining(trainingName);
-		Document childrenList = (Document)(training.get("children"));
-		if(childrenList.isEmpty()) throw new RuntimeException("La formation "+trainingName+" ne comporte pas encore de dossiers");
-		
-		return ResponseEntity.status(HttpStatus.OK).body(childrenList);
+		/*
+		 * if(trainingName == "") throw new
+		 * RuntimeException("Vous devez préciser le nom de la formation"); Document
+		 * training = Training.getTrainingByName(trainingName); Document childrenList =
+		 * (Document)(training.get("children")); if(childrenList.isEmpty()) throw new
+		 * RuntimeException("La formation "
+		 * +trainingName+" ne comporte pas encore de dossiers");
+		 * 
+		 * return ResponseEntity.status(HttpStatus.OK).body(childrenList);
+		 */
+		return null;
 	}
 
 	public ResponseEntity<Document> updateFolderOfTraining(String trainingName, String folderCurrentName, String folderNewName) {
@@ -237,20 +211,28 @@ public class MongoTrainingService {
 		 * renvoyer une erreur si la formation n'existe pas
 		 * rencoyer une erreur si le dossier n'existe pas
 		 * */
-		if(trainingName == "") throw new RuntimeException("Vous devez préciser le nom de la formation");
-		if(folderCurrentName == "") throw new RuntimeException("Vous devez préciser le nom du dossier à modifier");
-		if(folderNewName == "") throw new RuntimeException("Vous devez préciser le nouveau nom du dossier");
-		if(folderCurrentName == folderNewName) throw new RuntimeException("Le nouveau nom est le même que l'ancien");
-		
-		Document training = getTraining(trainingName);
-		Document folder = getFolder(training, folderCurrentName);
-		
-		
-		Document document = new Document("name", trainingName);
-        Document updatedDocument = new Document("$set", document.append("description", newDescription));
-        trainingCollection.updateOne(currentDocument, updatedDocument);
-		
-		return ResponseEntity.status(HttpStatus.OK).body(folder);
+		/*
+		 * if(trainingName == "") throw new
+		 * RuntimeException("Vous devez préciser le nom de la formation");
+		 * if(folderCurrentName == "") throw new
+		 * RuntimeException("Vous devez préciser le nom du dossier à modifier");
+		 * if(folderNewName == "") throw new
+		 * RuntimeException("Vous devez préciser le nouveau nom du dossier");
+		 * if(folderCurrentName == folderNewName) throw new
+		 * RuntimeException("Le nouveau nom est le même que l'ancien");
+		 * 
+		 * Document training = getTraining(trainingName); Document folder =
+		 * getFolder(training, folderCurrentName);
+		 * 
+		 * 
+		 * Document document = new Document("name", trainingName); Document
+		 * updatedDocument = new Document("$set", document.append("description",
+		 * newDescription)); trainingCollection.updateOne(currentDocument,
+		 * updatedDocument);
+		 * 
+		 * return ResponseEntity.status(HttpStatus.OK).body(folder);
+		 */
+		return null;
 	}
 	
 }

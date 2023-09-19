@@ -9,7 +9,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.stage.onlinecourse.security.service.AccountService;
-import com.stage.onlinecourse.service.mongoDbService.MongoDocumentService;
+import com.stage.onlinecourse.service.mongoDbService.MongoFileService;
 
 import lombok.AllArgsConstructor;
 

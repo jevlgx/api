@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.stage.onlinecourse.service.mongoDbService.MongoDocumentService;
+import com.stage.onlinecourse.service.mongoDbService.MongoFileService;
 
 import lombok.AllArgsConstructor;
 

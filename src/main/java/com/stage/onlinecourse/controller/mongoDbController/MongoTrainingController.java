@@ -31,31 +31,32 @@ public class MongoTrainingController {
         return mongoTrainingService.createTraining(trainingName,description);
     }
 	
-	@GetMapping("/trainingManagement/listTraining")
+	@GetMapping("/listAllTraining")
 	// Acessible à tous
-	public ResponseEntity<List<Document>> listTraining() {
+	public ResponseEntity<List<Document>> listAllTraining() {
 		
 		return mongoTrainingService.listAllTraining();
 	}
 	
-	@GetMapping("/training/listTrainingInfos")
+	@GetMapping("/{trainingName}/infos")
 	// Acessible à tous
-	public ResponseEntity<Document> listTrainingInfos(@RequestParam(name = "trainingName", required = true) String trainingName) {
+	public ResponseEntity<Document> listTrainingInfos(@PathVariable(required = true) String trainingName) {
 
 		return mongoTrainingService.listTrainingInfos(trainingName);
 	}
 	
-	@PutMapping("/trainingManagement/updateTraining")
+	@PutMapping("/{trainingCurrentName}/update")
     // TODO: verifier que l'utilisateur est un admin
-    public ResponseEntity<Document> updateTraining(@RequestParam(name ="trainingCurrentName", required = true) String trainingCurrentName,
+    public ResponseEntity<Document> updateTraining(@PathVariable(required = true) String trainingCurrentName,
     							@RequestParam(name = "newName", required = true) String newName,
-    							@RequestBody(required = true) String newDescription){
-        return mongoTrainingService.updateTraining(trainingCurrentName, newName, newDescription);
+    							@RequestBody(required = true) String newDescription,
+    							@RequestParam(name = "newPictureLink", required = true) String newPictureLink){
+        return mongoTrainingService.updateTraining(trainingCurrentName, newName, newDescription, newPictureLink);
     }
 	
-	@DeleteMapping("/trainingManagement/deleteTraining")
+	@DeleteMapping("/{trainingName}/delete")
     // TODO: verifier que l'utilisateur est un admin
-    public ResponseEntity<Document> deleteTraining(@RequestParam(name = "trainingName", required = true) String trainingName){
+    public ResponseEntity<Document> deleteTraining(@PathVariable(required = true) String trainingName){
 		
 		return mongoTrainingService.deleteTraining(trainingName);
     }

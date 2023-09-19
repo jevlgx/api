@@ -22,11 +22,12 @@ public class MongoDbConnexion {
 	public MongoCollection<Document> trainingCollection = database.getCollection(trainingCollectionName);
 	public MongoCollection<Document> folderCollection = database.getCollection(folderCollectionName);
 	
+	@Bean
 	@Qualifier("trainingCollection")
 	MongoCollection<Document> trainingCollection(){
 		return trainingCollection;
 	}
-	
+	@Bean
 	@Qualifier("folderCollection")
 	MongoCollection<Document> folderCollection(){
 		return folderCollection;
